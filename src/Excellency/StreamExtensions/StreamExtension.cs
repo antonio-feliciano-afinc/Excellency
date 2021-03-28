@@ -23,7 +23,6 @@ namespace Excellency.StreamExtensions
 
             return DeserializeFromExcel<T>(excelFileStream, excelFileExtension, new List<SheetMap> { new SheetMap(sourceAttr, typeof(T)) });
         }
-
         public static IEnumerable<T> DeserializeFromExcel<T>(this Stream excelFileStream, ExcelFileExtension excelFileExtension, IEnumerable<SheetMap> sheeMaps)
         {
             if (!sheeMaps.Any()) throw new PropertyNotMappedException("Failed: The map is not setted");
@@ -52,8 +51,7 @@ namespace Excellency.StreamExtensions
                 });
 
                 var header = sheet.Sheet.GetRow(0).Cells.Where(x=> cellMaps.Any(y=>y.Source.ToLower() == x.StringCellValue.ToLower())).ToList();
-                var indexes = header.Select(x => x.ColumnIndex);
-                
+                var indexes = header.Select(x => x.ColumnIndex);                
 
                 var assemblyName = new AssemblyName(sheet.Sheet.SheetName);
                 var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
@@ -105,7 +103,6 @@ namespace Excellency.StreamExtensions
             }
             return objects.Cast<T>().ToList();
         }
-
         private static IWorkbook WorkbookFactory(ExcelFileExtension excelFileExtension, Stream excelFileStream)
         {
             if (excelFileExtension == ExcelFileExtension.Xlsx)
@@ -129,65 +126,37 @@ namespace Excellency.StreamExtensions
             var cellType = cell.CellType;
 
             if (cellType == CellType.Numeric && DateUtil.IsCellDateFormatted(currentRow.GetCell(index)))
-            {
-                return FromExcelSerialDate(Convert.ToInt32(currentRow.GetCell(index).NumericCellValue));
-            }
-            else if (cellType == CellType.Numeric)
-            {
-                return currentRow.GetCell(index).NumericCellValue;
-            }
-            else if (cellType == CellType.String)
-            {
-                return currentRow.GetCell(index).StringCellValue;
-            }
-            else if (cellType == CellType.Boolean)
-            {
-                return currentRow.GetCell(index).BooleanCellValue;
-            }
-            else if (cellType == CellType.Formula && cell.CachedFormulaResultType == CellType.Numeric)
-            {
-                return currentRow.GetCell(index).NumericCellValue;
-            }
-            else if (cellType == CellType.Blank)
-            {
+                return FromExcelSerialDate(Convert.ToInt32(cell.NumericCellValue));            
+            else if (cellType == CellType.Numeric) 
+                return cell.NumericCellValue;
+            else if (cellType == CellType.String) 
+                return cell.StringCellValue;            
+            else if (cellType == CellType.Boolean) 
+                return cell.BooleanCellValue;
+            else if (cellType == CellType.Formula && cell.CachedFormulaResultType == CellType.Numeric) 
+                return cell.NumericCellValue;
+            else if (cellType == CellType.Blank) 
                 return null;
-            }
-            else
-            {
-                return currentRow.GetCell(index).StringCellValue;
-            }
+            else return cell.StringCellValue;
+            
         }
         private static CellMap GetCellMap(IEnumerable<CellMap> cellMaps, string source)
         {
-            var map = cellMaps.First(cell => cell.Source.ToLower() == source.ToLower());
-            return map;
+            return cellMaps.First(cell => cell.Source.ToLower() == source.ToLower());
         }
         private static object Cast(Type type, object transformedData)
         {
-            if (type == typeof(DateTime) || type == typeof(DateTime?))
-            {
+            if (type == typeof(DateTime) || type == typeof(DateTime?)) 
                 return Convert.ToDateTime(transformedData);
-            }
-            else if (type == typeof(int) || type == typeof(int?))
-            {
-                return Convert.ToInt32(transformedData);
-            }
-            else if (type == typeof(double) || type == typeof(double?))
-            {
+            else if (type == typeof(int) || type == typeof(int?)) 
+                return Convert.ToInt32(transformedData);            
+            else if (type == typeof(double) || type == typeof(double?)) 
                 return Convert.ToDouble(transformedData);
-            }
-            else if (type == typeof(decimal) || type == typeof(decimal?))
-            {
+            else if (type == typeof(decimal) || type == typeof(decimal?)) 
                 return Convert.ToDecimal(transformedData);
-            }
-            else if (type == typeof(string))
-            {
+            else if (type == typeof(string)) 
                 return Convert.ToString(transformedData);
-            }
-            else
-            {
-                return transformedData;
-            }
+            else return transformedData;            
         }
     }
 
